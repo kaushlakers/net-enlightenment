@@ -53,11 +53,16 @@ def print_dict(cent_dict):
 
 
 def main(args):
+
+    directed = (sys.argv[2].upper() == 'DIRECTED')
+
+    create_using = nx.DiGraph() if directed else nx.Graph()
+
     G = nx.read_edgelist(sys.argv[1])
     centrality_dict = {}
 
     #check for directed or undirected
-    if (sys.argv[2].upper() == 'DIRECTED'):
+    if (directed):
         centrality_dict['in_degree'] = nx.in_degree_centrality(G)
         centrality_dict['out_degree'] = nx.out_degree_centrality(G)
     else: 
@@ -78,7 +83,7 @@ def main(args):
     centrality_dict['clustering'] = nx.clustering(G)
     
     print_dict(centrality_dict)
-    
+
     #this seems to be giving disappointing results 
     #common_central_nodes = get_common_nodes_across_measures(centrality_dict, 1000)
 
