@@ -64,7 +64,8 @@ def main(args):
     create_using = nx.DiGraph() if directed else nx.Graph()
 
     G = nx.read_edgelist(sys.argv[1], create_using=create_using)
-    centrality_dict = {}
+
+   centrality_dict = {}
 
     #check for directed or undirected
     if (directed):
