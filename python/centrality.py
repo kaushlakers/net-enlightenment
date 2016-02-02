@@ -50,24 +50,35 @@ def print_dict(cent_dict):
             print str(node) + "\t" + str(value)
         print "\n\n\n"
     
+def is_connected(G, directed):
+    if directed:
+        return nx.is_strongly_connected(G)
+    else:
+        return nx.is_connected(G)
 
 
 def main(args):
-    G = nx.read_edgelist(sys.argv[1])
+
+    directed = (sys.argv[2].upper() == 'DIRECTED')
+
+    create_using = nx.DiGraph() if directed else nx.Graph()
+
+    G = nx.read_edgelist(sys.argv[1], create_using=create_using)
     centrality_dict = {}
 
     #check for directed or undirected
-    if (sys.argv[2].upper() == 'DIRECTED'):
+    if (directed):
         centrality_dict['in_degree'] = nx.in_degree_centrality(G)
         centrality_dict['out_degree'] = nx.out_degree_centrality(G)
     else: 
         centrality_dict['degree'] = nx.degree_centrality(G)
     
     #calculate harmonic if graph is disconnected
-    if nx.is_connected(G):
+    if is_connected(G, directed):
         centrality_dict['closeness'] = nx.closeness_centrality(G)
     else:
-        centrality_dict['closeness'] = nx.harmonic_centrality(G)
+        centrality_dict['harmonic'] = nx.harmonic_centrality(G)
+
 
     centrality_dict['betweenness'] = nx.betweenness_centrality(G)
 
@@ -78,7 +89,7 @@ def main(args):
     centrality_dict['clustering'] = nx.clustering(G)
     
     print_dict(centrality_dict)
-    
+
     #this seems to be giving disappointing results 
     #common_central_nodes = get_common_nodes_across_measures(centrality_dict, 1000)
 
