@@ -46,9 +46,22 @@ def get_common_nodes_across_measures(cent_dict, top_n):
 def print_dict(cent_dict):
     for measure, value_dict in cent_dict.iteritems():
         print "Values for "+measure
-        for node, value in value_dict.iteritems():
+        for node, value in sorted(value_dict.iteritems()):
             print str(node) + "\t" + str(value)
         print "\n\n\n"
+
+def print_tsv(cent_dict):
+    nodes = cent_dict[cent_dict.keys()[0]].keys()
+    measures = cent_dict.keys()
+    for measure in measures:
+        print measure + "\t",
+    print 
+    for node in sorted(nodes):
+        print str(node) + '\t',
+        for measure in measures:
+            print str(cent_dict[measure][node]) + "\t",
+        print 
+    
     
 def is_connected(G, directed):
     if directed:
@@ -63,9 +76,10 @@ def main(args):
 
     create_using = nx.DiGraph() if directed else nx.Graph()
 
-    G = nx.read_edgelist(sys.argv[1], create_using=create_using)
+    G = nx.read_edgelist(sys.argv[1], create_using=create_using, nodetype=int)
 
-   centrality_dict = {}
+    measures = []
+    centrality_dict = {}
 
     #check for directed or undirected
     if (directed):
@@ -74,25 +88,32 @@ def main(args):
     else: 
         centrality_dict['degree'] = nx.degree_centrality(G)
     
+    #print "Completed degree"
+
     #calculate harmonic if graph is disconnected
     if is_connected(G, directed):
         centrality_dict['closeness'] = nx.closeness_centrality(G)
     else:
         centrality_dict['harmonic'] = nx.harmonic_centrality(G)
 
-
+    #print "Completed closeness_centrality"
+    
+    
     centrality_dict['betweenness'] = nx.betweenness_centrality(G)
+    #print "Completed betweenness"
 
     centrality_dict['eigen'] = nx.eigenvector_centrality(G)
 
     centrality_dict['pagerank'] = nx.pagerank(G)
 
-    centrality_dict['clustering'] = nx.clustering(G)
+    G_prime = G
+    if directed:
+        G_prime = nx.read_edgelist(sys.argv[1], nodetype=int)
     
-    print_dict(centrality_dict)
-
-    #this seems to be giving disappointing results 
-    #common_central_nodes = get_common_nodes_across_measures(centrality_dict, 1000)
-
+    centrality_dict['clustering'] = nx.clustering(G_prime)
+    
+    print_tsv(centrality_dict)
+    
+    
 if __name__ == "__main__":
     main(sys.argv)
