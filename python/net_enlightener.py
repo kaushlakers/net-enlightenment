@@ -1,8 +1,8 @@
 import sys
 import networkx as nx
-import numpy as np
-import plotly.plotly as py 
-import plotly.graph_objs as go
+#import numpy as np
+#import plotly.plotly as py 
+#import plotly.graph_objs as go
 
 
 #indent using spaces plz
@@ -69,15 +69,7 @@ def is_connected(G, directed):
     else:
         return nx.is_connected(G)
 
-
-def main(args):
-
-    directed = (sys.argv[2].upper() == 'DIRECTED')
-
-    create_using = nx.DiGraph() if directed else nx.Graph()
-
-    G = nx.read_edgelist(sys.argv[1], create_using=create_using, nodetype=int)
-
+def calculate_centrality_measures(G, create_using, directed):
     measures = []
     centrality_dict = {}
 
@@ -114,6 +106,36 @@ def main(args):
     
     print_tsv(centrality_dict)
     
+
+def read_communities(G, filename, isMetis):
+    
+    comm_dict = {}
+
+    return comm_dict
+
+
+def calculate_community_measures(G, communities_dict):
+    print 'hi' 
+
+
+def main(args):
+
+    directed = False #(sys.argv[2].upper() == 'DIRECTED')
+
+    create_using = nx.DiGraph() if directed else nx.Graph()
+
+    G = nx.read_edgelist(sys.argv[1], create_using=create_using, nodetype=int)
+    
+    
+    #calculate_centrality_measures(G, create_using, directed)
+    isMetis = False
+    comm_dict = read_communities(G, sys.argv[3], isMetis)
+    calculate_community_measures(G, comm_dict)
+
+     
+    
+
+
     
 if __name__ == "__main__":
     main(sys.argv)

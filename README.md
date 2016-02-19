@@ -4,8 +4,8 @@
 
 run the file:
 
-	```  
-    $ python centrality.py [path_to_file]
+    ```bash
+    $ python centrality.py [path_to_file] undirected <communities_out_dump>
 	
-	$ python centrality.py [path_to_file] directed
+	$ python centrality.py [path_to_file] directed <communities_out_dump>
 	```
