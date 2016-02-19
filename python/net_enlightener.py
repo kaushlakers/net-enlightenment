@@ -1,5 +1,6 @@
 import sys
 import networkx as nx
+import community
 #import numpy as np
 #import plotly.plotly as py 
 #import plotly.graph_objs as go
@@ -114,8 +115,22 @@ def read_communities(G, filename, isMetis):
     return comm_dict
 
 
-def calculate_community_measures(G, communities_dict):
-    print 'hi' 
+def calculate_community_measures(G, comm_n_dict, n_comm_map):
+    
+    communities = comm_n_dict.keys()
+    graph_nodes = G.nodes()
+    conductance = {}
+    modularity = {}
+    n_cuts = {}
+
+    for comm in communities:
+        comm_nodes = comm_n_dict[comm]
+        residual_nodes = list(set(graph_nodes) - set(comm_nodes))
+        conductance[comm] = nx.conductance(G, comm_nodes, T=None)
+        n_cuts[comm] = nx.    
+
+
+
 
 
 def main(args):
