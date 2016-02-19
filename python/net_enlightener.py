@@ -107,15 +107,50 @@ def calculate_centrality_measures(G, create_using, directed):
     print_tsv(centrality_dict)
     
 
-def read_communities(G, filename, isMetis):
+def create_comm_node_mapping(G, filename, isMetis):
     
-    comm_dict = {}
+    comm_n_dict = {}
+    print filename
+    if isMetis:
+        #file is in a list of communities, with each line having exactly 1 community. mapping is line number == node number
 
-    return comm_dict
+        with open(filename) as f:
+            node_num = 0
+            for line in f:
+                comm_id = int(line)
+                if comm_id in comm_n_dict:
+                    comm_n_dict[comm_id].append(node_num)
+                else:
+                    comm_n_dict[comm_id] = [node_num]
+                node_num += 1
+
+    else:
+        with open(filename) as f:
+            for line in f:
+                if line[0] != '#':
+                    node_num, comm_id = [int(x) for x in line.split()]
+                    if comm_id in comm_n_dict:
+                        comm_n_dict[comm_id].append(node_num)
+                    else:
+                        comm_n_dict[comm_id] = [node_num]
+#                else:
+ #                   print line
+    print len(comm_n_dict)
+    return comm_n_dict
 
 
-def calculate_community_measures(G, communities_dict):
-    print 'hi' 
+def create_node_comm_mapping(comm_n_dict):
+
+    n_comm_dict = {}
+    for comm_id, nodes in comm_n_dict.iteritems():
+        for node in nodes:
+            if node not in n_comm_dict:
+                n_comm_dict[node] = comm_id
+            else:
+                print 'this should not be printed. same node detected twice!'
+    print len(n_comm_dict)
+    return n_comm_dict
+
 
 
 def main(args):
@@ -126,11 +161,14 @@ def main(args):
 
     G = nx.read_edgelist(sys.argv[1], create_using=create_using, nodetype=int)
     
-    
     #calculate_centrality_measures(G, create_using, directed)
     isMetis = False
-    comm_dict = read_communities(G, sys.argv[3], isMetis)
-    calculate_community_measures(G, comm_dict)
+    comm_n_dict = create_comm_node_mapping(G, sys.argv[3], isMetis)
+    n_comm_map = create_node_comm_mapping(comm_n_dict)
+    print comm_n_dict
+    print n_comm_map
+    calculate_community_measures(G, comm_n_dict, n_comm_map)
+
 
      
     
