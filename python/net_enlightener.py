@@ -151,7 +151,19 @@ def create_node_comm_mapping(comm_n_dict):
     print len(n_comm_dict)
     return n_comm_dict
 
-
+def calculate_entropy_of_youtube_communities(GT_filename):
+    
+    node_comm_GT_dict = {}
+    with open(GT_filename) as f:
+        comm_id = 0
+        for line in f:
+            for node in int(line.split()):
+                if node in node_comm_GT_dict :
+                    node_comm_GT_dict[node].add(comm_id)
+                else:
+                    node_comm_GT_dict[node] = Set([comm_id])
+        comm_id +=1 
+    print len(node_comm_GT_dict)
 
 def main(args):
 
@@ -169,11 +181,9 @@ def main(args):
     print n_comm_map
     calculate_community_measures(G, comm_n_dict, n_comm_map)
 
-
-     
+    if(len(sys.argv) == 5):
+        calculate_entropy_of_youtube_communities(sys.argv[4])
     
-
-
     
 if __name__ == "__main__":
     main(sys.argv)
