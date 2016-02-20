@@ -1,5 +1,8 @@
+from sets import Set
 import sys
 import networkx as nx
+import math
+#import community
 #import numpy as np
 #import plotly.plotly as py 
 #import plotly.graph_objs as go
@@ -115,7 +118,7 @@ def create_comm_node_mapping(G, filename, isMetis):
         #file is in a list of communities, with each line having exactly 1 community. mapping is line number == node number
 
         with open(filename) as f:
-            node_num = 0
+            node_num = 1
             for line in f:
                 comm_id = int(line)
                 if comm_id in comm_n_dict:
@@ -151,38 +154,143 @@ def create_node_comm_mapping(comm_n_dict):
     print len(n_comm_dict)
     return n_comm_dict
 
-def calculate_entropy_of_youtube_communities(GT_filename):
-    
+def calculate_entropy_of_youtube_communities(GT_filename, comm_n_dict):
     node_comm_GT_dict = {}
     with open(GT_filename) as f:
         comm_id = 0
         for line in f:
-            for node in int(line.split()):
+            for node_st in line.split():
+                node = int(node_st)
                 if node in node_comm_GT_dict :
                     node_comm_GT_dict[node].add(comm_id)
                 else:
                     node_comm_GT_dict[node] = Set([comm_id])
-        comm_id +=1 
-    print len(node_comm_GT_dict)
+        comm_id +=1
+
+    num_nodes_GT = len(node_comm_GT_dict)
+    comm_id = 0
+    comm_entropies = {}
+    entropy = 0
+    for comm, nodes in comm_n_dict.iteritems():
+        gtcomm_weighted_n_map = {}
+        comm_entropy = 0
+        unique_nodes_in_comm = 0
+        for node in nodes:
+            if node in node_comm_GT_dict:
+                unique_nodes_in_comm+=1
+                for gtcomm in node_comm_GT_dict[node]:
+                    if gtcomm in gtcomm_weighted_n_map:
+                        gtcomm_weighted_n_map[gtcomm] += 1/float(len(node_comm_GT_dict))
+                    else:
+                        gtcomm_weighted_n_map[gtcomm] = 1/float(len(node_comm_GT_dict))
+
+        for distinct_comm in gtcomm_weighted_n_map:
+            probability = gtcomm_weighted_n_map[distinct_comm]/float(unique_nodes_in_comm)
+            comm_entropy += -1*probability*math.log(probability)
+        entropy += (comm_entropy)*len(nodes)/float(num_nodes_GT)
+
+    print 'entropy of clustering is ' + str(entropy)
+#    print "len = " + str(len(node_comm_GT_dict))
+#    print 'num_comms =' + str(comm_id)
+
+def calculate_component_community_dict(G, comm_n_dict):
+    
+    components = nx.connected_components_subgraphs(G)
+    comp_comm_dict = {}
+    comp_dict = {}
+    i = 0
+    for comp in components:
+        comp_dict[i] = comp
+        comp_comm_dict[i] = []
+        for comm in comm_n_dict:
+            if len(set(comm_n_dict[comm]) - comp) <= 5:
+                comp_comm_dict[i].append(comm) 
+        i = i+1
+
+    return (comp_dict, comp_comm_dict)
+
+def calculate_component_wise_conductance(G, comm_n_dict):
+
+    comp_graphs = list(nx.connected_component_subgraphs(G))
+    
+    comp_wise_conductance = {i:{} for i in range(len(comp_graphs))}
+    i = 0
+    
+    for comp_id in comp_wise_conductance:
+        graph = comp_graphs[comp_id]
+        for comm in comm_n_dict:
+            if set(comm_n_dict[comm]).issubset(set(graph.nodes())) and len(list(graph.nodes())) > len(comm_n_dict[comm]) and len(comm_n_dict[comm]) > 1:
+                comp_wise_conductance[comp_id][comm] = nx.conductance(graph, comm_n_dict[comm])
+
+    comp_min_conductance = {i:{} for i in range(len(comp_graphs))}
+    comp_num_communities = {i:{} for i in range(len(comp_graphs))}
+    print comp_wise_conductance
+    for comp_id in comp_wise_conductance:
+        #print comp_wise_conductance[comp_id]
+        comp_num_communities[comp_id] = len(comp_wise_conductance[comp_id])
+        if len(comp_wise_conductance[comp_id]) > 0:
+            comp_min_conductance[comp_id] = sorted(comp_wise_conductance[comp_id].items(), key=lambda x: x[1])[0][1]
+
+    #print comp_num_communities, comp_min_conductance        
+
+    return comp_num_communities, comp_min_conductance
+
+
+def calculate_community_measures(G, comm_n_dict, n_comm_map):
+    
+    communities = comm_n_dict.keys()
+    graph_nodes = G.nodes()
+    conductance = {}
+    n_cuts = {}
+
+    comp_conductance_dict = {}
+
+    #comp_dict, comp_comm_dict = calculate_component_community_dict(G, comm_n_dict)
+
+    '''
+    for comp in comp_dict:
+        conductance[comp] = {}
+        for comm in comp_comm_dict[comp]:
+            comm_nodes = comm_n_dict[comm]
+            residual_nodes = list(comp_dict[comp] - set(comm_nodes))
+            conductance[comp][comm] = nx.conductance(G, comm_nodes, residual_nodes)
+    '''
+    print calculate_component_wise_conductance(G, comm_n_dict)
+
+    measures = {}
+    #measures['conductance'] = sorted(conductance.items(), key=lambda x: x[1])[0][1]
+    measures['modularity'] = community.modularity(n_comm_map, G)
+    
+
 
 def main(args):
 
     directed = False #(sys.argv[2].upper() == 'DIRECTED')
 
+    isMetis = False
+    if "adjlist" in sys.argv[1].split("."):
+        isMetis = True
+
     create_using = nx.DiGraph() if directed else nx.Graph()
 
-    G = nx.read_edgelist(sys.argv[1], create_using=create_using, nodetype=int)
-    
+    G = None
+    if isMetis:
+        G=nx.read_adjlist(sys.argv[1], nodetype=int)
+    else:    
+        G = nx.read_edgelist(sys.argv[1], create_using=create_using, nodetype=int)
+
+    #print G.n
+
     #calculate_centrality_measures(G, create_using, directed)
-    isMetis = False
+    #isMetis = False
     comm_n_dict = create_comm_node_mapping(G, sys.argv[3], isMetis)
     n_comm_map = create_node_comm_mapping(comm_n_dict)
-    print comm_n_dict
-    print n_comm_map
-    calculate_community_measures(G, comm_n_dict, n_comm_map)
+    #print comm_n_dict
+    #print n_comm_map
+    #calculate_community_measures(G, comm_n_dict, n_comm_map)
 
     if(len(sys.argv) == 5):
-        calculate_entropy_of_youtube_communities(sys.argv[4])
+        calculate_entropy_of_youtube_communities(sys.argv[4], comm_n_dict)
     
     
 if __name__ == "__main__":

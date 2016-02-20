@@ -1,0 +1,16 @@
+#runs mlrmcl on all thrice - with inflation varying between 1, 2 and 3 each time
+for i in `find . -name *.metis`;do for j in 1 2 3;do echo $i $j ;/home/6/chakraba/local/bin/mlrmcl -o $i.$j.mlrmcl.out -i $j; done; done
+
+#gets number of communities
+for i in `ls *2.mlrmcl.out`; do echo $i; cat $i | sort -rn | head -n 1; done > communities.mlrmcl
+
+#uses num_communities to run gpmetis on it
+for i in `ls *.metis`;do for j in `cat communities.mlrmcl | grep -A1 $i | grep '^[0-9]\+'`;do  echo $i $j ;/home/6/chakraba/local/bin/gpmetis $i $j; done; done
+
+
+for i in `ls *.metis`;do echo $i ;/home/6/chakraba/local/bin/community -o:$i.cnm.out -i:$i;  done
+for i in `ls *cnm.out`;do echo $i;  less $i | grep 'Communities' | grep -o '[0-9]\+'; done
+
+
+
+
