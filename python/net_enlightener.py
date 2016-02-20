@@ -209,32 +209,66 @@ def calculate_component_community_dict(G, comm_n_dict):
 
     return (comp_dict, comp_comm_dict)
 
-def calculate_component_wise_conductance(G, comm_n_dict):
+def calculate_component_wise_measures(G, comm_n_dict):
 
     comp_graphs = list(nx.connected_component_subgraphs(G))
-    
-    comp_wise_conductance = {i:{} for i in range(len(comp_graphs))}
+    comp_wise_conductance = {}
+    comp_wise_ncut = {}
+    #comp_wise_conductance = {i:{} for i in range(len(comp_graphs))}
     i = 0
     
-    for comp_id in comp_wise_conductance:
+    for comp_id in range(len(comp_graphs)):
         graph = comp_graphs[comp_id]
-        for comm in comm_n_dict:
-            if set(comm_n_dict[comm]).issubset(set(graph.nodes())) and len(list(graph.nodes())) > len(comm_n_dict[comm]) and len(comm_n_dict[comm]) > 1:
-                comp_wise_conductance[comp_id][comm] = nx.conductance(graph, comm_n_dict[comm])
+        if len(list(graph.nodes())) > 1:
+            for comm in comm_n_dict:
+                if set(comm_n_dict[comm]).issubset(set(graph.nodes())) and len(list((graph.nodes()))) > len(comm_n_dict[comm]) and len(comm_n_dict[comm]) > 1:
+                    if comp_id not in comp_wise_conductance:
+                        comp_wise_conductance[comp_id] = {}
+                    comp_wise_conductance[comp_id][comm] = nx.conductance(graph, comm_n_dict[comm])
 
-    comp_min_conductance = {i:{} for i in range(len(comp_graphs))}
-    comp_num_communities = {i:{} for i in range(len(comp_graphs))}
-    print comp_wise_conductance
+    #print comp_wise_conductance
+    comp_min_conductance = {}
+    comp_num_communities = {}
     for comp_id in comp_wise_conductance:
         #print comp_wise_conductance[comp_id]
-        comp_num_communities[comp_id] = len(comp_wise_conductance[comp_id])
         if len(comp_wise_conductance[comp_id]) > 0:
+            #comp_min_conductance[comp_id] = sum(comp_wise_conductance[comp_id].values())/ len(comp_wise_conductance[comp_id])
+            comp_num_communities[comp_id] = len(comp_wise_conductance[comp_id])
             comp_min_conductance[comp_id] = sorted(comp_wise_conductance[comp_id].items(), key=lambda x: x[1])[0][1]
+    
 
-    #print comp_num_communities, comp_min_conductance        
+    return min(comp_min_conductance.values())
 
-    return comp_num_communities, comp_min_conductance
 
+def calculate_component_wise_ncut(G, comm_n_dict):
+
+    comp_graphs = list(nx.connected_component_subgraphs(G))
+    comp_wise_conductance = {}
+    comp_wise_ncut = {}
+    #comp_wise_conductance = {i:{} for i in range(len(comp_graphs))}
+    i = 0
+    
+    for comp_id in range(len(comp_graphs)):
+        graph = comp_graphs[comp_id]
+        if len(list(graph.nodes())) > 1:
+            for comm in comm_n_dict:
+                if set(comm_n_dict[comm]).issubset(set(graph.nodes())) and len(list((graph.nodes()))) > len(comm_n_dict[comm]) and len(comm_n_dict[comm]) > 1:
+                    if comp_id not in comp_wise_conductance:
+                        comp_wise_conductance[comp_id] = {}
+                    comp_wise_conductance[comp_id][comm] = nx.normalized_cut_size(graph, comm_n_dict[comm])
+
+    #print comp_wise_conductance
+    comp_min_conductance = {}
+    comp_num_communities = {}
+    for comp_id in comp_wise_conductance:
+        #print comp_wise_conductance[comp_id]
+        if len(comp_wise_conductance[comp_id]) > 0:
+            comp_min_conductance[comp_id] = sum(comp_wise_conductance[comp_id].values())/ len(comp_wise_conductance[comp_id])
+            comp_num_communities[comp_id] = len(comp_wise_conductance[comp_id])
+            #comp_min_conductance[comp_id] = sorted(comp_wise_conductance[comp_id].items(), key=lambda x: x[1])[0][1]
+    
+    #print comp_wise_conductance
+    return sum(comp_min_conductance.values())/len(comp_min_conductance.values())
 
 def calculate_community_measures(G, comm_n_dict, n_comm_map):
     
@@ -255,11 +289,11 @@ def calculate_community_measures(G, comm_n_dict, n_comm_map):
             residual_nodes = list(comp_dict[comp] - set(comm_nodes))
             conductance[comp][comm] = nx.conductance(G, comm_nodes, residual_nodes)
     '''
-    print calculate_component_wise_conductance(G, comm_n_dict)
-
+    print "COnductance is " + str(calculate_component_wise_measures(G, comm_n_dict))
+    print "Ncut is " + str(calculate_component_wise_ncut(G, comm_n_dict))
     measures = {}
     #measures['conductance'] = sorted(conductance.items(), key=lambda x: x[1])[0][1]
-    measures['modularity'] = community.modularity(n_comm_map, G)
+    print "Modularity is " + str(community.modularity(n_comm_map, G))
     
 
 
@@ -287,7 +321,7 @@ def main(args):
     n_comm_map = create_node_comm_mapping(comm_n_dict)
     #print comm_n_dict
     #print n_comm_map
-    #calculate_community_measures(G, comm_n_dict, n_comm_map)
+    calculate_community_measures(G, comm_n_dict, n_comm_map)
 
     if(len(sys.argv) == 5):
         calculate_entropy_of_youtube_communities(sys.argv[4], comm_n_dict)
