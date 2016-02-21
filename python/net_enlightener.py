@@ -2,7 +2,7 @@ from sets import Set
 import sys
 import networkx as nx
 import math
-#import community
+import community
 #import numpy as np
 #import plotly.plotly as py 
 #import plotly.graph_objs as go
