@@ -3,7 +3,7 @@ import sys
 import networkx as nx
 import math
 import community
-#import numpy as np
+import numpy as np
 #import plotly.plotly as py 
 #import plotly.graph_objs as go
 
@@ -136,8 +136,6 @@ def create_comm_node_mapping(G, filename, isMetis):
                         comm_n_dict[comm_id].append(node_num)
                     else:
                         comm_n_dict[comm_id] = [node_num]
-#                else:
- #                   print line
     print len(comm_n_dict)
     return comm_n_dict
 
@@ -190,8 +188,6 @@ def calculate_entropy_of_youtube_communities(GT_filename, comm_n_dict):
         entropy += (comm_entropy)*len(nodes)/float(num_nodes_GT)
 
     print 'entropy of clustering is ' + str(entropy)
-#    print "len = " + str(len(node_comm_GT_dict))
-#    print 'num_comms =' + str(comm_id)
 
 def calculate_component_community_dict(G, comm_n_dict):
     
