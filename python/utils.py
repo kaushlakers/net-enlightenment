@@ -6,7 +6,7 @@ import time
 
 
 def read_graphml_file(file):
-	return nx.read_graphml(file)
+    return nx.read_graphml(file)
 
 
 #visualizes a networkx graph object

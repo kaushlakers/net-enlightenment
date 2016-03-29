@@ -1,7 +1,9 @@
+from sets import Set
 import sys
 import networkx as nx
+import math
 import community
-#import numpy as np
+import numpy as np
 #import plotly.plotly as py 
 #import plotly.graph_objs as go
 
@@ -134,8 +136,6 @@ def create_comm_node_mapping(G, filename, isMetis):
                         comm_n_dict[comm_id].append(node_num)
                     else:
                         comm_n_dict[comm_id] = [node_num]
-#                else:
- #                   print line
     print len(comm_n_dict)
     return comm_n_dict
 
@@ -151,6 +151,43 @@ def create_node_comm_mapping(comm_n_dict):
                 print 'this should not be printed. same node detected twice!'
     print len(n_comm_dict)
     return n_comm_dict
+
+def calculate_entropy_of_youtube_communities(GT_filename, comm_n_dict):
+    node_comm_GT_dict = {}
+    with open(GT_filename) as f:
+        comm_id = 0
+        for line in f:
+            for node_st in line.split():
+                node = int(node_st)
+                if node in node_comm_GT_dict :
+                    node_comm_GT_dict[node].add(comm_id)
+                else:
+                    node_comm_GT_dict[node] = Set([comm_id])
+        comm_id +=1
+
+    num_nodes_GT = len(node_comm_GT_dict)
+    comm_id = 0
+    comm_entropies = {}
+    entropy = 0
+    for comm, nodes in comm_n_dict.iteritems():
+        gtcomm_weighted_n_map = {}
+        comm_entropy = 0
+        unique_nodes_in_comm = 0
+        for node in nodes:
+            if node in node_comm_GT_dict:
+                unique_nodes_in_comm+=1
+                for gtcomm in node_comm_GT_dict[node]:
+                    if gtcomm in gtcomm_weighted_n_map:
+                        gtcomm_weighted_n_map[gtcomm] += 1/float(len(node_comm_GT_dict))
+                    else:
+                        gtcomm_weighted_n_map[gtcomm] = 1/float(len(node_comm_GT_dict))
+
+        for distinct_comm in gtcomm_weighted_n_map:
+            probability = gtcomm_weighted_n_map[distinct_comm]/float(unique_nodes_in_comm)
+            comm_entropy += -1*probability*math.log(probability)
+        entropy += (comm_entropy)*len(nodes)/float(num_nodes_GT)
+
+    print 'entropy of clustering is ' + str(entropy)
 
 def calculate_component_community_dict(G, comm_n_dict):
     
@@ -282,11 +319,9 @@ def main(args):
     #print n_comm_map
     calculate_community_measures(G, comm_n_dict, n_comm_map)
 
-
-     
+    if(len(sys.argv) == 5):
+        calculate_entropy_of_youtube_communities(sys.argv[4], comm_n_dict)
     
-
-
     
 if __name__ == "__main__":
     main(sys.argv)
