@@ -322,6 +322,8 @@ def main(args):
     if(len(sys.argv) == 5):
         calculate_entropy_of_youtube_communities(sys.argv[4], comm_n_dict)
     
-    
+   
+   '''
 if __name__ == "__main__":
     main(sys.argv)
+    '''
