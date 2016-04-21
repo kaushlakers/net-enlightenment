@@ -27,7 +27,7 @@ def threshold_graph(G1, thresh):
     for u,v in G1.edges():
         if not G.has_edge(u,v):
             edge_dict = G1[u][v]
-            if "weight" not in G1:
+            if "weight" not in edge_dict:
                 edge_dict = edge_dict[0]
             if edge_dict['weight'] > thresh:
                 G.add_edge(u, v, weight=edge_dict['weight'])
