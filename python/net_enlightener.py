@@ -1,4 +1,3 @@
-from sets import Set
 import sys
 import networkx as nx
 import math
