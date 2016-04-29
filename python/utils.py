@@ -17,12 +17,24 @@ def plot_graph(G):
     show()
 
 
-'''
-removes edges below a given threshold. Also removes duplicate edges between
-2 nodes. Returns a new graph object
-'''
+def remove_dups(G1):
+    G = nx.DiGraph()
+    i = 0
+    for u,v in G1.edges():
+        if not G.has_edge(u,v):
+            edge_dict = G1[u][v]
+            while "weight" not in edge_dict and len(edge_dict) > 0:
+                edge_dict = edge_dict[0]
+            if "weight" in edge_dict:
+                G.add_edge(u, v, weight=edge_dict['weight'])
+            else:
+                i += 1
+    #some graphs had empty edge weights. Just to check how many edges
+    if i > 0:
+        print "empty edge weights is " + str(i)
+    return G
+
 def threshold_graph(G1, thresh):
-    edge_weights = []
     G = nx.DiGraph()
     for u,v in G1.edges():
         if not G.has_edge(u,v):
@@ -30,5 +42,14 @@ def threshold_graph(G1, thresh):
             if "weight" not in edge_dict:
                 edge_dict = edge_dict[0]
             if edge_dict['weight'] > thresh:
-                G.add_edge(u, v, weight=edge_dict['weight'])
+                G.add_edge(u, v)
     return G
+
+
+def convert_to_node_comm_map(comm_dict):
+    node_com_map = {}
+    for comm in comm_dict:
+        for node in comm_dict[comm]:
+            node_com_map[node] = comm
+
+    return node_com_map
