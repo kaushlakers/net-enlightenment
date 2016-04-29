@@ -9,27 +9,28 @@ import pandas as pd
 import community
 
 def get_mcl_communities(G):
-    M, clusters = networkx_mcl(G, max_loops=100)
+    M, clusters = networkx_mcl(G, max_loop=100)
     node_map = convert_to_node_comm_map(clusters)
     return node_map
 
 def get_modularity(G, node_com_map):
     #writing to gml file to read using igraph
-    nx.write_graphml(G, "temp.gml")
+    nx.write_graphml(G, "temp.graphml")
 
-    ig_G = GraphBase.Read_GraphML("temp.gml")
-    os.remove("temp.gml")
+    ig_G = GraphBase.Read_GraphML("temp.graphml")
+    os.remove("temp.graphml")
 
     return ig_G.modularity(node_com_map)
 
 
 def run_on_all_graphs(dir):
-    df = pd.DataFrame(columns=["Naive_mcl", "prob_mcl"])
-    for file in os.listdir(dir):
+    file_list = list(os.listdir(dir))
+    df = pd.DataFrame(index=[f_spl.split('.')[0] for f_spl in file_list],columns=["Naive_mcl", "prob_mcl"])
+    for file in file_list:
         print "Working on file " + file
-        index = file.split(".")
+        index = file.split(".")[0]
 
-        G = read_graphml_file(file)
+        G = read_graphml_file(dir + file)
         G = remove_dups(G)
 
         #mcl using probabilities as weights

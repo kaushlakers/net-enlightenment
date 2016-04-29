@@ -19,12 +19,19 @@ def plot_graph(G):
 
 def remove_dups(G1):
     G = nx.DiGraph()
+    i = 0
     for u,v in G1.edges():
         if not G.has_edge(u,v):
             edge_dict = G1[u][v]
-            if "weight" not in edge_dict:
+            while "weight" not in edge_dict and len(edge_dict) > 0:
                 edge_dict = edge_dict[0]
-            G.add_edge(u, v, weight=edge_dict['weight'])
+            if "weight" in edge_dict:
+                G.add_edge(u, v, weight=edge_dict['weight'])
+            else:
+                i += 1
+    #some graphs had empty edge weights. Just to check how many edges
+    if i > 0:
+        print "empty edge weights is " + str(i)
     return G
 
 def threshold_graph(G1, thresh):
